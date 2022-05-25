@@ -1,6 +1,4 @@
-// package classes;
-
-// import interfaces.INoeud;
+// Ancient import pour Java
 
 // import javax.xml.bind.SchemaOutputResolver;
 // import java.io.*;
@@ -8,42 +6,67 @@
 // import java.net.ServerSocket;
 // import java.net.Socket;
 
-using INoeud;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Sockets;
 using System.Net;
-using System.Net.Mail;
+using System.Net.Sockets;
 
-
-
-public class Noeud : INoeud<>
+public class Noeud : INoeud
 {
 
 	private long time;
+	private Boolean isLeader = false;
+	private Socket s;
 
+	public Socket StartNoeud(int port, int n, Boolean isLeader)
+	{
+		try
+		{
+			port = 25100 + 100 * n;
+			IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
+			IPAddress ipAddress = ipHostInfo.AddressList[0];
+			IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 
-	public long[] requestTime(int[] ports, long seuil) throws IOException
+			Socket sender = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+			try
+			{
+				s.Connect(remoteEP);
+
+				if (isLeader)
+				{
+					int[] ports = new int[] { 25200, 25300 };
+					RequestTime(ports, 1);
+				}
+				else
+				{
+
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.ToString());
+			}
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e.ToString());
+		}
+	}
+
+	public long[] RequestTime(int[] ports, long seuil)
 	{
 
 	}
 
 
-	public Socket startNoeud(int port) throws IOException
+	public long GetTime()
 	{
 
-	}
-
-	public long getTime()
-	{
 		return time;
 	}
 
-	public void setTime(long offset)
+	public void SetTime(long offset)
 	{
-
+		time += offset;
 	}
 }
