@@ -1,16 +1,8 @@
-// Ancient import pour Java
-
-// import javax.xml.bind.SchemaOutputResolver;
-// import java.io.*;
-// import java.net.InetAddress;
-// import java.net.ServerSocket;
-// import java.net.Socket;
-
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
+using System.Linq;
 
 public class Noeud : INoeud
 {

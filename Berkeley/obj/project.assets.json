@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\lecla\\Desktop\\2022Hiver\\LOG736\\TP\\Lab1_API\\Lab1_API.csproj",
+      "projectUniqueName": "C:\\Users\\lecla\\Desktop\\2022Hiver\\LOG736\\TP\\Lab1_API\\Berkeley\\Lab1_API.csproj",
       "projectName": "Lab1_API",
-      "projectPath": "C:\\Users\\lecla\\Desktop\\2022Hiver\\LOG736\\TP\\Lab1_API\\Lab1_API.csproj",
+      "projectPath": "C:\\Users\\lecla\\Desktop\\2022Hiver\\LOG736\\TP\\Lab1_API\\Berkeley\\Lab1_API.csproj",
       "packagesPath": "C:\\Users\\lecla\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\lecla\\Desktop\\2022Hiver\\LOG736\\TP\\Lab1_API\\obj\\",
+      "outputPath": "C:\\Users\\lecla\\Desktop\\2022Hiver\\LOG736\\TP\\Lab1_API\\Berkeley\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\lecla\\AppData\\Roaming\\NuGet\\NuGet.Config",
