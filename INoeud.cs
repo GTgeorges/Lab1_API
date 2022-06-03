@@ -10,7 +10,7 @@ using System.Net.Mail;
 interface INoeud
 {
 	long[] RequestTime(int[] ports, long seuil);
-	Socket StartNoeud(int port);
+	void StartNoeud(int n, bool isLeader);
 	long GetTime();
 	void SetTime(long offset);
 }

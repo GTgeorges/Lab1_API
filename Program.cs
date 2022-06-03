@@ -1,6 +1,14 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using System;
 
-Noeud noeud1 = new Noeud();
-Noeud noeud2 = new Noeud();
-Noeud noeud3 = new Noeud();
+internal class Program
+{
+	static void Main(string[] args)
+	{
+		Noeud noeud = new Noeud();
+
+		int n = int.Parse(args[0]);
+		bool isLeader = bool.Parse(args[1]);
+
+		noeud.StartNoeud(n, isLeader);
+	}
+}
