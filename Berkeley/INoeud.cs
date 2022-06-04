@@ -9,7 +9,7 @@ using System.Net.Mail;
 
 interface INoeud
 {
-	long[] RequestTime(IPAddress ipAddress);
+	long[] RequestTime(IPAddress ipAddress, Socket[] noeuds);
 	void StartNoeud(int n, bool isLeader);
 	long GetTime();
 	void SetTime(long offset);
