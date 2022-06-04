@@ -28,13 +28,12 @@ public class Noeud : INoeud
 
 				s.Bind(EndPoint);
 				s.Listen();
-				Socket[] sockets = new Socket[_numberOfPeer];
 
-				Console.WriteLine("Waiting for a connection...");
 				// Program is suspended while waiting for an incoming connection.  
+				Console.WriteLine("Waiting for a connection...");
 				Socket handler = s.Accept();
 
-				// An incoming connection needs to be processed. 
+				// Incoming connection from leader needs to be processed. 
 				byte[] bytes = new Byte[1];
 				while (true)
 				{
@@ -49,39 +48,28 @@ public class Noeud : INoeud
 
 				long time = GetTime();
 
+				// Print the time of the node
 				Console.WriteLine("My time is " + time);
 
+				// Send local time to leader
 				handler.Send(BitConverter.GetBytes(time));
 				handler.Shutdown(SocketShutdown.Both);
 				handler.Close();
 			}
 			else
 			{
-				Socket[] noeuds = new Socket[_numberOfPeer];
-				for (int i = 0; i < _numberOfPeer; i++)
-					noeuds[i] = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-
-				for (int i = 0; i < _numberOfPeer; i++)
-					noeuds[i].Connect(new IPEndPoint(ipAddress, _basePort + (i + 1) * 100));
-
 				// Get time leader
 				long time = GetTime();
 
-				for (int i = 0; i < _numberOfPeer; i++)
-					noeuds[i].Send(new byte[] { 1 });
+				// Get time from other nodes 
+				long[] times = RequestTime(ipAddress);
 
-				long[] times = new long[_numberOfPeer];
-
-				// Get time other nodes
-				for (int i = 0; i < _numberOfPeer; i++)
-				{
-					byte[] bytes = new Byte[sizeof(long)];
-					noeuds[i].Receive(bytes);
-					times[i] = BitConverter.ToInt64(bytes);
-				}
 				long mean = (times.Sum() + time) / (_numberOfPeer + 1);
-				Console.WriteLine("noeud: " + times[0]);
+
+				// Some print to see what's going on
+				for (int i = 0; i < _numberOfPeer; i++)
+					Console.WriteLine("noeud" + (int)(i + 1) + ": " + times[i]);
+
 				Console.WriteLine("leader: " + time);
 				Console.WriteLine("Moyenne: " + mean);
 			}
@@ -93,9 +81,32 @@ public class Noeud : INoeud
 		}
 	}
 
-	public long[] RequestTime(int[] ports, long seuil)
+	public long[] RequestTime(IPAddress ipAddress)
 	{
-		return new long[] { 1 };
+		// Makes Sockets for the different endpoints of the different nodes
+		Socket[] noeuds = new Socket[_numberOfPeer];
+		for (int i = 0; i < _numberOfPeer; i++)
+			noeuds[i] = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+		// Connect to each node
+		for (int i = 0; i < _numberOfPeer; i++)
+			noeuds[i].Connect(new IPEndPoint(ipAddress, _basePort + (i + 1) * 100));
+
+		// Send one byte to indicate that the leader wants the time from each node
+		for (int i = 0; i < _numberOfPeer; i++)
+			noeuds[i].Send(new byte[] { 1 });
+
+		long[] times = new long[_numberOfPeer];
+
+		// Receive the different time values for each node
+		for (int i = 0; i < _numberOfPeer; i++)
+		{
+			byte[] bytes = new Byte[sizeof(long)];
+			noeuds[i].Receive(bytes);
+			times[i] = BitConverter.ToInt64(bytes);
+		}
+
+		return times;
 	}
 
 
