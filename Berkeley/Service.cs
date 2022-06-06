@@ -21,4 +21,9 @@ public class Service : IService
 	{
 		return DateTime.UtcNow;
 	}
+
+	public void OpenConnection()
+	{
+		
+	}
 }
