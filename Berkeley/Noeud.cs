@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Linq;
 using System.Text;
 
-public class Noeud : INoeud
+public class Noeud// : INoeud
 {
 	public const int _numberOfPeer = 3;
 	public const int _basePort = 25000;
@@ -46,7 +46,7 @@ public class Noeud : INoeud
 		while (true)
 		{
 			// Program is suspended while waiting for an incoming connection.  
-			peer.Accept();
+			peer.AcceptConnexion();
 
 			// Incoming connection from leader needs to be processed. 
 			byte[] bytes = new Byte[sizeof(long)];
@@ -71,18 +71,18 @@ public class Noeud : INoeud
 			peer.Send(time);
 
 			peer.Receive(bytes);
-			long offset = -BitConverter.ToInt64(bytes);
+			long offset = BitConverter.ToInt64(bytes);
 
 			// Print the time of the node before the correction
 			time = GetTime();
 			Console.WriteLine($"[{this.rank}] My time is now {time}.");
 
-			SetTime(offset);
+			SetTime(-offset);
 
 			time = GetTime();
 
 			// Print the time of the node after changing the time
-			Console.WriteLine($"[{this.rank}] My time is now {time}. Correction of ({offset}).");
+			Console.WriteLine($"[{this.rank}] My time is now {time}. Correction of ({-offset}).");
 
 			// Close connection
 			peer.Close();
@@ -91,6 +91,7 @@ public class Noeud : INoeud
 
 	private void StartLeader()
 	{
+		Leader leader = new Leader(_numberOfPeer);
 		while (true)
 		{
 			// Get time from other nodes 
@@ -98,12 +99,11 @@ public class Noeud : INoeud
 			if (key == ConsoleKey.Enter)
 			{
 				Console.WriteLine();
-				Socket[] noeuds = new Socket[_numberOfPeer];
-				long[] times = RequestTime(noeuds);
+				long[] times = RequestTime(leader);
 
 				long mean = times.Sum() / times.Length;
 
-				SendOffset(noeuds, times, mean);
+				SendOffset(leader, times, mean);
 
 				// Print the time of the node before the correction
 				long time = GetTime();
@@ -118,13 +118,13 @@ public class Noeud : INoeud
 			}
 			else if (key == ConsoleKey.X)
 			{
-				CloseConnections();
+				leader.CloseConnections(ipAddress, GetPort);
 				break;
 			}
 		}
 	}
 
-	private void SendOffset(Socket[] noeuds, long[] times, long mean)
+	private void SendOffset(Leader leader, long[] times, long mean)
 	{
 		// Calculate the offset for each node
 		long[] offsets = new long[_numberOfPeer + 1];
@@ -132,16 +132,13 @@ public class Noeud : INoeud
 			offsets[i] = -(mean - times[i]);
 
 		// Send the offset value to each node. First offset is the leader's so we skip it 
-		for (int i = 0; i < _numberOfPeer; i++)
-		{
-			byte[] offset = BitConverter.GetBytes(offsets[i + 1]);
-			noeuds[i].Send(offset);
-		}
+		leader.Send(offsets);
 	}
 
-	public long[] RequestTime(Socket[] noeuds)
+	public long[] RequestTime(Leader leader)
 	{
-		ConnectSockets(noeuds);
+		/* Makes Sockets for the different endpoints of the different nodes and Connect */
+		leader.ConnectSockets(ipAddress, GetPort);
 
 		long[] times = new long[_numberOfPeer + 1];
 
@@ -149,28 +146,12 @@ public class Noeud : INoeud
 		times[0] = GetTime();
 
 		// Send byte = 1 to indicate that the leader wants the time from each node
-		for (int i = 0; i < _numberOfPeer; i++)
-			noeuds[i].Send(new byte[] { 1 });
+		leader.Send(1);
 
 		// Receive the different time values for each node
-		for (int i = 0; i < _numberOfPeer; i++)
-		{
-			byte[] bytes = new Byte[sizeof(long)];
-			noeuds[i].Receive(bytes);
-			times[i + 1] = BitConverter.ToInt64(bytes);
-		}
+		leader.Receive(times);
 
 		return times;
-	}
-
-	/* Makes Sockets for the different endpoints of the different nodes and Connect */
-	private void ConnectSockets(Socket[] noeuds)
-	{
-		for (int i = 0; i < _numberOfPeer; i++)
-		{
-			noeuds[i] = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-			noeuds[i].Connect(new IPEndPoint(ipAddress, GetPort(i + 1)));
-		}
 	}
 
 	/* Get the current local time */
@@ -183,16 +164,6 @@ public class Noeud : INoeud
 	public void SetTime(long offset)
 	{
 		epoch = epoch.AddMilliseconds(-offset);
-	}
-
-	private void CloseConnections()
-	{
-		Socket[] noeuds = new Socket[_numberOfPeer];
-		ConnectSockets(noeuds);
-
-		// Send byte = 2 to indicate that the leader wants the time from each node
-		for (int i = 0; i < _numberOfPeer; i++)
-			noeuds[i].Send(new byte[] { 2 });
 	}
 
 	private static int GetPort(int rank)
