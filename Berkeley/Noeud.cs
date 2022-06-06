@@ -30,7 +30,7 @@ public class Noeud : INoeud
 	{
 		this.rank = rank;
 
-		if (this.rank == 0 && !isLeader)
+		if (this.rank == 0 && !isLeader || this.rank != 0 && isLeader)
 		{
 			throw new ArgumentException("Leader, and only leader, must be rank 0.");
 		}
