@@ -14,10 +14,18 @@ public class Noeud : INoeud
 	// Is the rank of the node
 	private int n;
 
+	IService _service;
+
+	public Noeud(IService service, bool randomOffset=true)
+	{
+		_service = service;
+		if (randomOffset)
+			epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
+	}
+
 	public void StartNoeud(int n, bool isLeader)
 	{
 		this.n = n;
-		epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
 
 		// Setup ipAdress
 		IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
@@ -63,7 +71,7 @@ public class Noeud : INoeud
 				while (true)
 				{
 					int bytesRec = handler.Receive(bytes);
-					long offset = BitConverter.ToInt64(bytes);
+					long offset = -BitConverter.ToInt64(bytes);
 
 					// Print the time of the node before the correction
 					time = GetTime();
@@ -74,7 +82,7 @@ public class Noeud : INoeud
 					time = GetTime();
 
 					// Print the time of the node after changing the time
-					Console.WriteLine($"[{n}] My time is now {time}. Correction of ({-offset}).");
+					Console.WriteLine($"[{n}] My time is now {time}. Correction of ({offset}).");
 
 					break;
 				}
@@ -109,7 +117,7 @@ public class Noeud : INoeud
 					Console.WriteLine($"[{n}] My time is now {time}.");
 
 					// Adjust leader's time with its offset value
-					SetTime(-(mean - times[0]));
+					SetTime(mean - times[0]);
 
 					// Print the time of the node after changing the time
 					time = GetTime();
@@ -186,12 +194,12 @@ public class Noeud : INoeud
 	/* Get the current time */
 	public long GetTime()
 	{
-		return (long)(DateTime.UtcNow - epoch).TotalMilliseconds;
+		return (long)(_service.UtcNow() - epoch).TotalMilliseconds;
 	}
 
 	/* Set a new time from an offset value */
 	public void SetTime(long offset)
 	{
-		epoch = epoch.AddMilliseconds(offset);
+		epoch = epoch.AddMilliseconds(-offset);
 	}
 }
