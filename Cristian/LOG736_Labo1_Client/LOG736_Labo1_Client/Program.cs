@@ -4,4 +4,4 @@ Console.WriteLine("Solution Client");
 
 
 var client = new Client();
-client.RequestTime(25000, DateTime.Now.Millisecond, 5);
+client.RequestTime(25000, client.GetTime(), 5);

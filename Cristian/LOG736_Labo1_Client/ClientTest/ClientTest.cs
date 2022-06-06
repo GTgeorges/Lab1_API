@@ -1,28 +1,12 @@
 ﻿using LOG736_Labo1;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Net.Sockets;
-using Moq;
 
 namespace LOG736_Labo1_Client
 {
     [TestClass]
     public class ClientTest
     {
-        public const int PortNumber = 25000;
-
-        [TestInitialize]
-        public void InitClientTest()
-        {
-            
-        }
-
-        [TestCleanup]
-        public void CleanClientTest()
-        {
-            
-        }
-
         [TestMethod]
         public void GivenClient_WhenRequestingConnectionToServer_ShouldConnectToServer()
         {
@@ -32,7 +16,7 @@ namespace LOG736_Labo1_Client
             //Act
             myClient.RequestTime(1, 1, 1);
             //Assert
-            Assert.IsTrue(myClient.MySocket.IsConnected);
+            Assert.IsTrue(myClient?.MySocket?.IsConnected);
         }
 
         [TestMethod]

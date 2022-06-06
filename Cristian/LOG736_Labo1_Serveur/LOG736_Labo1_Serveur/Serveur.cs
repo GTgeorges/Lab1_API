@@ -6,15 +6,12 @@ namespace LOG736_Labo1
 {
     public class Serveur : IServeur
     {
-        //private string receivedMessage;
-        //private Socket listener;
         private List<Socket> sockets;
 
         static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public Serveur()
         {
-            //listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             sockets = new List<Socket>();
         }
         public long GetTime()
@@ -29,24 +26,35 @@ namespace LOG736_Labo1
             var ipAddress = host.AddressList[0];
             var endpoint = new IPEndPoint(ipAddress, port);
             Socket connection;
+            Random random = new Random();
 
             try
             {
+                //Creation du socket serveur et mise en écoute pour les connexions du client
                 Socket listener = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 sockets.Add(listener);
                 listener.Bind(endpoint);
                 listener.Listen();
-                Console.WriteLine("En attente de connexion..."); //socket is listening
+                Console.WriteLine("En attente de connexion...");
 
                 while (true)
                 {
+                    //nouvelle connexion au serveur
                     connection = listener.Accept();
                     sockets.Add(connection);
-                    
+
                     Console.WriteLine("Serveur connecté à {0}.", (connection.LocalEndPoint as IPEndPoint)?.Address);
+                    Console.WriteLine("Appuyez sur Enter pour continuer ou S pour arreter.");
+                    Thread.Sleep(random.Next(50));
                     connection.Send(Encoding.ASCII.GetBytes(GetTime().ToString()));
-                    connection.Close();
+
+                    ConsoleKey key = Console.ReadKey(true).Key;
+                    if (key == ConsoleKey.S)
+                        break;
+                    else if (key == ConsoleKey.Enter)
+                        continue;
                 }
+
             }
             catch(Exception ex)
             {
@@ -57,6 +65,7 @@ namespace LOG736_Labo1
 
         public void StopServer()
         {
+            Console.WriteLine("Arret du serveur...");
             sockets.ForEach(x => x.Close());
         }
     }

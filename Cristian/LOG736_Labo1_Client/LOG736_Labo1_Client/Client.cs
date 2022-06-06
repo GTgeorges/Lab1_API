@@ -28,37 +28,39 @@ namespace LOG736_Labo1
             var ipAddress = host.AddressList[0];
             var endpoint = new IPEndPoint(ipAddress, serverPort);
             var counter = 0;
+            Console.WriteLine("Heure courante du client: {0}\n", currentTime);
 
-            /*Socket client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);*/
             try
             {
                 while (counter < numberOftries)
                 {
-                    Console.WriteLine("Synchronisation #{0}", counter++);
+                    //Connexion au server d'horloge sur l'ordinateur local
+                    Console.WriteLine("Synchronisation #{0}", ++counter);
                     Socket client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    //connexion au server d'horloge sur l'ordinateur local
                     client.Connect(endpoint);
                     Console.WriteLine("Client connecté à: {0}", client?.RemoteEndPoint?.ToString());
 
+                    //Reception des donnnes du serveur
                     var requestTime = DateTime.Now.Millisecond;
-
-                    //recevoir donnees du serveur
                     byte[] messagedReceived = new byte[1024];
                     int byteRecv = client.Receive(messagedReceived);
                     var serverTime = Convert.ToInt64(Encoding.ASCII.GetString(messagedReceived, 0, byteRecv));
                     var responseTime = DateTime.Now.Millisecond;
-                    //var actualTime = (long)DateTime.Now.Millisecond;
-                    var actualTime = GetTime();
-
+                    var realTime = GetTime();
                     Console.WriteLine("Temps d'horloge retourné par le serveur: {0}", serverTime);
 
-                    var processDelay = responseTime - requestTime;
+                    //Calcul du delais de traitement
+                    var delay = responseTime - requestTime;
+                    Console.WriteLine("Délai de traitement: {0} millisecondes", delay);
 
-                    Console.WriteLine("Délai de traitement: {0} millisecondes", processDelay);
+                    Console.WriteLine("Heure d'horloge reelle du client: {0}", realTime);
 
-                    var clientTime = serverTime + TimeSpan.FromMilliseconds(processDelay / 2).Milliseconds;
+                    //Ajustement de l'horloge du client
+                    var clientTime = serverTime + TimeSpan.FromMilliseconds(delay / 2).Milliseconds;
                     Console.WriteLine("Horloge synchronisé du client: {0}", clientTime);
-                    accuracy = actualTime - clientTime;
+
+                    //Calcul de l'erreur
+                    accuracy = realTime - clientTime;
                     Console.WriteLine("Erreur de synchronisation: {0} millisecondes", accuracy);
                     SetTime(clientTime);
                     client.Close();
