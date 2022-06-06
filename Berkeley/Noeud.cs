@@ -19,9 +19,9 @@ public class Noeud : INoeud
 	public Noeud(IService service, bool randomOffset = true)
 	{
 		_service = service;
-		
+
 		this.ipAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList[0]; // Get localhost ipAdress
-		
+
 		if (randomOffset)
 			epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
 	}
@@ -30,14 +30,14 @@ public class Noeud : INoeud
 	{
 		this.rank = rank;
 
-		if (!(this.rank == 0 && isLeader))
+		if (this.rank == 0 && !isLeader)
 		{
 			throw new ArgumentException("Leader, and only leader, must be rank 0.");
 		}
-		
+
 		if (isLeader)
 		{
-            StartLeader();
+			StartLeader();
 		}
 		else
 		{
