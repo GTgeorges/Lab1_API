@@ -22,49 +22,43 @@ public class Noeud : INoeud
 		this.ipAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList[0]; // Get localhost ipAdress
 		if (randomOffset)
 			epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
-
 	}
 
 	public void StartNoeud(int rank, bool isLeader)
 	{
 		this.rank = rank;
 		
-		if (!isLeader)
+		if (isLeader)
 		{
-            StartPeer();
+            StartLeader();
 		}
 		else
 		{
-			StartLeader();
+			StartPeer();
 		}
 	}
 
 	private void StartPeer()
 	{
-		IPEndPoint endPoint = new IPEndPoint(ipAddress, GetPort(rank));
-		Socket socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-		socket.Bind(endPoint);
-		socket.Listen();
+		Peer peer = new Peer();
+		peer.OpenPeerConnection(ipAddress, GetPort(rank));
 
 		while (true)
 		{
 			// Program is suspended while waiting for an incoming connection.  
-			Socket handler = socket.Accept();
+			peer.Accept();
 
 			// Incoming connection from leader needs to be processed. 
 			byte[] bytes = new Byte[sizeof(long)];
 			bool needToExit = false;
 			while (true)
 			{
-				int bytesRec = handler.Receive(bytes);
+				peer.Receive(bytes);
 				if (bytes[0] == 1)
 					break;
-
 				else if (bytes[0] == 2)
 				{
-					handler.Shutdown(SocketShutdown.Both);
-					handler.Close();
+					peer.Close();
 					needToExit = true;
 					break;
 				}
@@ -74,30 +68,24 @@ public class Noeud : INoeud
 
 			// Send local time to leader
 			long time = GetTime();
-			handler.Send(BitConverter.GetBytes(time));
+			peer.Send(time);
 
-			while (true)
-			{
-				int bytesRec = handler.Receive(bytes);
-				long offset = -BitConverter.ToInt64(bytes);
+			peer.Receive(bytes);
+			long offset = -BitConverter.ToInt64(bytes);
 
-				// Print the time of the node before the correction
-				time = GetTime();
-				Console.WriteLine($"[{this.rank}] My time is now {time}.");
+			// Print the time of the node before the correction
+			time = GetTime();
+			Console.WriteLine($"[{this.rank}] My time is now {time}.");
 
-				SetTime(offset);
+			SetTime(offset);
 
-				time = GetTime();
+			time = GetTime();
 
-				// Print the time of the node after changing the time
-				Console.WriteLine($"[{this.rank}] My time is now {time}. Correction of ({offset}).");
-
-				break;
-			}
+			// Print the time of the node after changing the time
+			Console.WriteLine($"[{this.rank}] My time is now {time}. Correction of ({offset}).");
 
 			// Close connection
-			handler.Shutdown(SocketShutdown.Both);
-			handler.Close();
+			peer.Close();
 		}
 	}
 
@@ -114,10 +102,6 @@ public class Noeud : INoeud
 				long[] times = RequestTime(noeuds);
 
 				long mean = times.Sum() / times.Length;
-
-				// Print the time of the node when requesting time and the mean
-				// Console.WriteLine($"[{n}] My time is {times[0]}");
-				// Console.WriteLine("Moyenne: " + mean);
 
 				SendOffset(noeuds, times, mean);
 
@@ -153,16 +137,6 @@ public class Noeud : INoeud
 			byte[] offset = BitConverter.GetBytes(offsets[i + 1]);
 			noeuds[i].Send(offset);
 		}
-	}
-
-	public void CloseConnections()
-	{
-		Socket[] noeuds = new Socket[_numberOfPeer];
-		ConnectSockets(noeuds);
-
-		// Send byte = 2 to indicate that the leader wants the time from each node
-		for (int i = 0; i < _numberOfPeer; i++)
-			noeuds[i].Send(new byte[] { 2 });
 	}
 
 	public long[] RequestTime(Socket[] noeuds)
@@ -209,6 +183,16 @@ public class Noeud : INoeud
 	public void SetTime(long offset)
 	{
 		epoch = epoch.AddMilliseconds(-offset);
+	}
+
+	private void CloseConnections()
+	{
+		Socket[] noeuds = new Socket[_numberOfPeer];
+		ConnectSockets(noeuds);
+
+		// Send byte = 2 to indicate that the leader wants the time from each node
+		for (int i = 0; i < _numberOfPeer; i++)
+			noeuds[i].Send(new byte[] { 2 });
 	}
 
 	private static int GetPort(int rank)
