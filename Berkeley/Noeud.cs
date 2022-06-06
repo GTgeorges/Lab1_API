@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Linq;
 using System.Text;
 
-public class Noeud
+public class Noeud : INoeud
 {
 	public const int _numberOfPeer = 3;
 	public const int _basePort = 25000;
@@ -16,10 +16,12 @@ public class Noeud
 	private int rank;
 	private IPAddress ipAddress;
 
-	public Noeud(IService service, bool randomOffset=true)
+	public Noeud(IService service, bool randomOffset = true)
 	{
 		_service = service;
+		
 		this.ipAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList[0]; // Get localhost ipAdress
+		
 		if (randomOffset)
 			epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
 	}
@@ -27,6 +29,11 @@ public class Noeud
 	public void StartNoeud(int rank, bool isLeader)
 	{
 		this.rank = rank;
+
+		if (!(this.rank == 0 && isLeader))
+		{
+			throw new ArgumentException("Leader, and only leader, must be rank 0.");
+		}
 		
 		if (isLeader)
 		{
@@ -166,6 +173,7 @@ public class Noeud
 		epoch = epoch.AddMilliseconds(-offset);
 	}
 
+	/* Return the port fot a socket connection of a given rank */
 	private static int GetPort(int rank)
 	{
 		return _basePort + (rank + 1) * 100;

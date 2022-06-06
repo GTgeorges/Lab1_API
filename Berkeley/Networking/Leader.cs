@@ -6,15 +6,15 @@ using System.Text;
 
 public interface ILeader
 {
-	public void ConnectSockets(IPAddress ipAddress, Func<int, int> portRankFonction);
+	ConnectSockets(IPAddress ipAddress, Func<int, int> portRankFonction);
 
-	public void Send(long[] data);
+	Send(long[] data);
 
-	public void Send(byte data);
+	Send(byte data);
 
-	public void CloseConnections(IPAddress ipAddress, Func<int, int> portRankFonction);
+	CloseConnections(IPAddress ipAddress, Func<int, int> portRankFonction);
 
-	public void Receive(long[] readBuffer);
+	Receive(long[] readBuffer);
 }
 
 
