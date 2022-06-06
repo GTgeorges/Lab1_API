@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Linq;
 using System.Text;
 
-public class Noeud// : INoeud
+public class Noeud
 {
 	public const int _numberOfPeer = 3;
 	public const int _basePort = 25000;
@@ -40,13 +40,13 @@ public class Noeud// : INoeud
 
 	private void StartPeer()
 	{
-		Peer peer = new Peer();
-		peer.OpenPeerConnection(ipAddress, GetPort(rank));
+		IPeer peer = _service.GetPeer();
+		peer.OpenConnection(ipAddress, GetPort(rank));
 
 		while (true)
 		{
 			// Program is suspended while waiting for an incoming connection.  
-			peer.AcceptConnexion();
+			peer.AcceptConnection();
 
 			// Incoming connection from leader needs to be processed. 
 			byte[] bytes = new Byte[sizeof(long)];
@@ -91,7 +91,7 @@ public class Noeud// : INoeud
 
 	private void StartLeader()
 	{
-		Leader leader = new Leader(_numberOfPeer);
+		ILeader leader = _service.GetLeader(_numberOfPeer);
 		while (true)
 		{
 			// Get time from other nodes 
@@ -124,7 +124,7 @@ public class Noeud// : INoeud
 		}
 	}
 
-	private void SendOffset(Leader leader, long[] times, long mean)
+	private void SendOffset(ILeader leader, long[] times, long mean)
 	{
 		// Calculate the offset for each node
 		long[] offsets = new long[_numberOfPeer + 1];
@@ -135,7 +135,7 @@ public class Noeud// : INoeud
 		leader.Send(offsets);
 	}
 
-	public long[] RequestTime(Leader leader)
+	public long[] RequestTime(ILeader leader)
 	{
 		/* Makes Sockets for the different endpoints of the different nodes and Connect */
 		leader.ConnectSockets(ipAddress, GetPort);
