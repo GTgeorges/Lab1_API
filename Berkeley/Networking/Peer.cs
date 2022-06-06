@@ -6,15 +6,15 @@ using System.Text;
 
 public interface IPeer
 {
-	public void OpenConnection(IPAddress ipAddress, int port);
+	void OpenConnection(IPAddress ipAddress, int port);
 
-	public void AcceptConnection();
+	void AcceptConnection();
 
-	public int Receive(byte[] readBuffer);
+	int Receive(byte[] readBuffer);
 
-	public void Close();
+	void Close();
 
-	public void Send(long time);
+	void Send(long time);
 }
 
 public class Peer : IPeer
