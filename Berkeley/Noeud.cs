@@ -173,7 +173,7 @@ public class Noeud : INoeud
 		epoch = epoch.AddMilliseconds(-offset);
 	}
 
-	/* Return the port fot a socket connection of a given rank */
+	/* Return the port for a socket connection of a given rank */
 	private static int GetPort(int rank)
 	{
 		return _basePort + (rank + 1) * 100;
