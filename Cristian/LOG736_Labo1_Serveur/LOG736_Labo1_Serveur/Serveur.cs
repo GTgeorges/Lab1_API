@@ -40,14 +40,15 @@ namespace LOG736_Labo1
 
 				while (true)
 				{
+					Thread.Sleep(200);
+
 					//nouvelle connexion au serveur
 					connection = listener.Accept();
 					sockets.Add(connection);
 
+					long serverTime = GetTime();
 					Console.WriteLine("Serveur connecté à {0}.", (connection.LocalEndPoint as IPEndPoint)?.Address);
-					Console.WriteLine("Appuyez sur Enter pour continuer ou S pour arreter.");
-					Thread.Sleep(random.Next(50));
-					connection.Send(Encoding.ASCII.GetBytes(GetTime().ToString()));
+					connection.Send(Encoding.ASCII.GetBytes(serverTime.ToString()));
 				}
 
 			}
@@ -61,7 +62,10 @@ namespace LOG736_Labo1
 		public void StopServer()
 		{
 			Console.WriteLine("Arret du serveur...");
-			sockets.ForEach(x => x.Close());
+			sockets.ForEach(x =>
+			{
+				x.Close();
+			});
 		}
 	}
 }

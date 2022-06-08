@@ -33,10 +33,13 @@ namespace LOG736_Labo1
 
 			try
 			{
+				long[] rtt = new long[numberOftries];
+				long[] serverTimes = new long[numberOftries];
+				// long[] 
 				while (counter < numberOftries)
 				{
 					//Connexion au server d'horloge sur l'ordinateur local
-					Console.WriteLine("Synchronisation #{0}", ++counter);
+					Console.WriteLine("Synchronisation #{0}", counter + 1);
 					Socket client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 					client.Connect(endpoint);
 					Console.WriteLine("Client connecté à: {0}", client?.RemoteEndPoint?.ToString());
@@ -46,31 +49,46 @@ namespace LOG736_Labo1
 					byte[] messagedReceived = new byte[1024];
 					int byteRecv = client.Receive(messagedReceived);
 					var serverTime = Convert.ToInt64(Encoding.ASCII.GetString(messagedReceived, 0, byteRecv));
-					var responseTime = DateTime.Now;
-					var realTime = GetTime();
 					Console.WriteLine("Temps d'horloge retourné par le serveur: {0}", serverTime);
+					serverTimes[counter] = serverTime;
+					var responseTime = DateTime.Now;
 
 					//Calcul du delais de traitement
 					var delay = (long)(responseTime - requestTime).TotalMilliseconds;
 					Console.WriteLine("Délai de traitement: {0} millisecondes", delay);
 
-					Console.WriteLine("Heure d'horloge reelle du client: {0}", realTime);
-
-					//Ajustement de l'horloge du client
-					var clientTime = serverTime + TimeSpan.FromMilliseconds(delay / 2).Milliseconds;
-					Console.WriteLine("Horloge synchronisé du client: {0}", clientTime);
-
-					//Calcul de l'erreur
-					erreur = realTime - clientTime;
-					Console.WriteLine("Erreur de synchronisation: {0} millisecondes", erreur);
-					SetTime(erreur);
+					rtt[counter] = delay;
 					client.Close();
-					Console.WriteLine();
+					counter++;
 				}
+				int minIndex = 0;
+				long minRtt = long.MaxValue;
+				for (int i = 0; i < numberOftries; i++)
+				{
+					if (rtt[i] < minRtt)
+					{
+						minIndex = i;
+						minRtt = rtt[i];
+					}
+				}
+
+				var realTime = GetTime();
+				Console.WriteLine("Heure d'horloge reelle du client: {0}", realTime);
+
+				//Ajustement de l'horloge du client
+				var clientTime = serverTimes[minIndex] + TimeSpan.FromMilliseconds(rtt[minIndex] / 2).Milliseconds;
+				Console.WriteLine("Horloge synchronisé du client: {0}", clientTime);
+
+				//Calcul de l'erreur
+				erreur = realTime - clientTime;
+				Console.WriteLine("Erreur de synchronisation: {0} millisecondes", erreur);
+				SetTime(erreur);
+
+				Console.WriteLine();
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.Message);
+				Console.WriteLine(ex);
 			}
 		}
 
