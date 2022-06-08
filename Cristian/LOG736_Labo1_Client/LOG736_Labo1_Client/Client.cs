@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -24,7 +25,8 @@ namespace LOG736_Labo1
 
 		public void RequestTime(int serverPort, long currentTime, int numberOftries)
 		{
-			epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
+			int randomOffset = (new Random()).Next(-100, 100);
+			epoch = epoch.AddMilliseconds(randomOffset);
 			var host = Dns.GetHostEntry("localhost");
 			var ipAddress = host.AddressList[0];
 			var endpoint = new IPEndPoint(ipAddress, serverPort);
@@ -35,7 +37,7 @@ namespace LOG736_Labo1
 			{
 				long[] rtt = new long[numberOftries];
 				long[] serverTimes = new long[numberOftries];
-				// long[] 
+				DateTime[] requestTimes = new DateTime[numberOftries];
 				while (counter < numberOftries)
 				{
 					//Connexion au server d'horloge sur l'ordinateur local
@@ -46,12 +48,14 @@ namespace LOG736_Labo1
 
 					//Reception des donnnes du serveur
 					var requestTime = DateTime.Now;
+					requestTimes[counter] = requestTime;
 					byte[] messagedReceived = new byte[1024];
 					int byteRecv = client.Receive(messagedReceived);
 					var serverTime = Convert.ToInt64(Encoding.ASCII.GetString(messagedReceived, 0, byteRecv));
+					var responseTime = DateTime.Now;
 					Console.WriteLine("Temps d'horloge retourné par le serveur: {0}", serverTime);
 					serverTimes[counter] = serverTime;
-					var responseTime = DateTime.Now;
+					
 
 					//Calcul du delais de traitement
 					var delay = (long)(responseTime - requestTime).TotalMilliseconds;
@@ -74,11 +78,13 @@ namespace LOG736_Labo1
 
 				var realTime = GetTime();
 				Console.WriteLine("Heure d'horloge reelle du client: {0}", realTime);
+				long delaySinceRtt = (long)(DateTime.Now - requestTimes[minIndex]).TotalMilliseconds;
 
 				//Ajustement de l'horloge du client
-				var clientTime = serverTimes[minIndex] + TimeSpan.FromMilliseconds(rtt[minIndex] / 2).Milliseconds;
+				var clientTime = serverTimes[minIndex] + delaySinceRtt + TimeSpan.FromMilliseconds(rtt[minIndex] / 2).Milliseconds;
 				Console.WriteLine("Horloge synchronisé du client: {0}", clientTime);
 
+				Console.WriteLine($"Offset {randomOffset}");
 				//Calcul de l'erreur
 				erreur = realTime - clientTime;
 				Console.WriteLine("Erreur de synchronisation: {0} millisecondes", erreur);

@@ -22,7 +22,7 @@ namespace LOG736_Labo1
 
 		public void StartServer(int port)
 		{
-			epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
+			// epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
 			var host = Dns.GetHostEntry("localhost");
 			var ipAddress = host.AddressList[0];
 			var endpoint = new IPEndPoint(ipAddress, port);
