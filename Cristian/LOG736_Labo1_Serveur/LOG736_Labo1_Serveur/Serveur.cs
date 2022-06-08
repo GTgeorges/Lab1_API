@@ -20,9 +20,9 @@ namespace LOG736_Labo1
 			return ms;
 		}
 
-		public void StartServer(int port)
+		public void StartServer(int port, int numberOftries)
 		{
-			epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
+			//epoch = epoch.AddMilliseconds((new Random()).Next(-100, 100));
 			var host = Dns.GetHostEntry("localhost");
 			var ipAddress = host.AddressList[0];
 			var endpoint = new IPEndPoint(ipAddress, port);
@@ -38,9 +38,10 @@ namespace LOG736_Labo1
 				listener.Listen();
 				Console.WriteLine("En attente de connexion...");
 
-				while (true)
+				int counter = 0;
+				while (counter < numberOftries)
 				{
-					Thread.Sleep(200);
+					Thread.Sleep(random.Next(200));
 
 					//nouvelle connexion au serveur
 					connection = listener.Accept();
@@ -49,6 +50,7 @@ namespace LOG736_Labo1
 					long serverTime = GetTime();
 					Console.WriteLine("Serveur connecté à {0}.", (connection.LocalEndPoint as IPEndPoint)?.Address);
 					connection.Send(Encoding.ASCII.GetBytes(serverTime.ToString()));
+					counter++;
 				}
 
 			}

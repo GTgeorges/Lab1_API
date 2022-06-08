@@ -2,5 +2,5 @@
 using LOG736_Labo1;
 Console.WriteLine("Solution Serveur");
 var serveur = new Serveur();
-serveur.StartServer(25000);
+serveur.StartServer(25000, 5);
 Environment.Exit(0);
